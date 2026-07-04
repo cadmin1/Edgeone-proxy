@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeOne Proxy</title>
+    <meta name="description" content="通过 EdgeOne Pages Functions 生成标准或高级代理访问链接。">
+    <meta name="theme-color" content="#09090b">
+    <script>
+      (() => {
+        try {
+          const locale = localStorage.getItem("edgeone_proxy_language") || "zh-CN";
+          const mode = localStorage.getItem("edgeone_proxy_theme") || "system";
+          const theme =
+            mode === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : mode === "dark"
+                ? "dark"
+                : "light";
+
+          document.documentElement.lang = locale;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+          document.documentElement.style.backgroundColor = theme === "dark" ? "#09090b" : "#fff";
+        } catch {
+          document.documentElement.lang = "zh-CN";
+          document.documentElement.dataset.theme = "light";
+          document.documentElement.style.colorScheme = "light";
+          document.documentElement.style.backgroundColor = "#fff";
+        }
+      })();
+    </script>
+    <link rel="icon" href="favicon.ico?v=20260705-1" sizes="any">
+    <link rel="icon" href="favicon.svg?v=20260705-2" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css?v=20260705-8">
+  </head>
+  <body data-page="home">
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="header-inner">
+          <a class="brand" href="index.html" aria-label="EdgeOne Proxy 首页" data-i18n-aria-label="brandHome">
+            <span class="brand-mark" aria-hidden="true">EO</span>
+            <span data-i18n="brand">EdgeOne Proxy</span>
+          </a>
+
+          <div class="header-right">
+            <nav class="main-nav" aria-label="页面导航" data-i18n-aria-label="primaryNav">
+              <a class="is-active" href="index.html" aria-current="page" data-i18n="navProxy">Proxy</a>
+              <a href="https://htools.zrf.me/" target="_blank" rel="noopener noreferrer" data-i18n="navTools">工具站</a>
+              <a href="https://blog.zrf.me/" target="_blank" rel="noopener noreferrer" data-i18n="navBlog">博客</a>
+            </nav>
+
+            <div class="header-actions">
+              <div class="language-switcher">
+                <button class="icon-btn language-toggle" type="button" id="languageToggle" aria-label="切换语言" aria-expanded="false" aria-controls="languageMenu" data-i18n-aria-label="languageToggle">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m5 8 6 6"></path>
+                    <path d="m4 14 6-6 2-3"></path>
+                    <path d="M2 5h12"></path>
+                    <path d="M7 2h1"></path>
+                    <path d="m22 22-5-10-5 10"></path>
+                    <path d="M14 18h6"></path>
+                  </svg>
+                </button>
+                <div class="language-menu" id="languageMenu" role="menu" aria-label="选择语言" hidden data-i18n-aria-label="languageMenu">
+                  <button class="language-option" type="button" role="menuitem" data-locale="zh-CN">
+                    <span>简体中文</span>
+                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m20 6-11 11-5-5"></path>
+                    </svg>
+                  </button>
+                  <button class="language-option" type="button" role="menuitem" data-locale="en">
+                    <span>English</span>
+                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m20 6-11 11-5-5"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="theme-switcher">
+                <button class="icon-btn theme-toggle" type="button" id="themeToggle" aria-label="切换主题" aria-expanded="false" aria-controls="themeMenu" data-i18n-aria-label="themeToggle">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                  </svg>
+                </button>
+                <div class="theme-menu" id="themeMenu" role="menu" aria-label="选择主题" hidden data-i18n-aria-label="themeMenu">
+                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="light">
+                    <span data-i18n="themeLight">浅色</span>
+                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m20 6-11 11-5-5"></path>
+                    </svg>
+                  </button>
+                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="dark">
+                    <span data-i18n="themeDark">深色</span>
+                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m20 6-11 11-5-5"></path>
+                    </svg>
+                  </button>
+                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="system">
+                    <span data-i18n="themeSystem">跟随系统</span>
+                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m20 6-11 11-5-5"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <a class="icon-btn" href="https://github.com/TencentEdgeOne/pages-templates" target="_blank" rel="noopener noreferrer" aria-label="GitHub" data-i18n-aria-label="githubLink">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5a10.4 10.4 0 0 0-5.5 0C8.5 2 7.5 2 7.5 2a6.5 6.5 0 0 0 0 3.5 5.4 5.4 0 0 0-1 3.5c0 3.5 3 5.5 6 5.5a4.8 4.8 0 0 0-1 3.5v4"></path>
+                  <path d="M9 18c-4.5 2-5-2-7-2"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <div class="container">
+          <section class="page-title" aria-labelledby="pageHeading">
+            <div>
+              <p class="eyebrow">EdgeOne Pages Proxy</p>
+              <h1 id="pageHeading" data-i18n="heroTitle">网站代理访问工具</h1>
+              <p data-i18n="heroDesc">输入目标网站地址，选择代理模式后生成当前部署域名下的访问链接。页面只负责生成入口，代理请求仍由现有 Functions 处理。</p>
+            </div>
+          </section>
+
+          <section class="tool-area" aria-label="代理链接生成器" data-i18n-aria-label="proxyTool">
+            <div class="tool-main">
+              <div class="tool-card card">
+                <div class="tool-card-head">
+                  <div>
+                    <h2 data-i18n="toolTitle">生成代理链接</h2>
+                    <p data-i18n="toolDesc">填写完整 URL，例如 https://example.com。</p>
+                  </div>
+                  <span class="status-pill" data-i18n="statusReady">就绪</span>
+                </div>
+
+                <form id="proxyForm" class="proxy-form">
+                  <div class="form-group">
+                    <label for="url" data-i18n="urlLabel">目标网站地址</label>
+                    <input type="url" id="url" name="url" placeholder="https://example.com" autocomplete="url" spellcheck="false" required>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="field-label-row">
+                      <label data-i18n="modeLabel">代理模式</label>
+                      <span data-i18n="modeHint">选择一个入口</span>
+                    </div>
+                    <div class="proxy-options" role="radiogroup" aria-label="代理模式" data-i18n-aria-label="modeLabel">
+                      <button class="proxy-option active" type="button" data-type="proxy" role="radio" aria-checked="true">
+                        <span class="option-title" data-i18n="standardMode">标准代理模式</span>
+                        <span class="option-desc" data-i18n="standardDesc">简单快速的代理入口，适合静态内容或单页访问。</span>
+                      </button>
+                      <button class="proxy-option" type="button" data-type="advanced-proxy" role="radio" aria-checked="false">
+                        <span class="option-title" data-i18n="advancedMode">高级代理模式</span>
+                        <span class="option-desc" data-i18n="advancedDesc">进入支持页面链接改写的入口，适合连续浏览。</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-primary" type="submit" data-i18n="submitButton">开始代理访问</button>
+                </form>
+
+                <p class="error" id="errorMessage"></p>
+
+                <div class="result is-empty" id="resultContainer" aria-live="polite">
+                  <p id="resultTitle" data-i18n="resultTitle">代理链接</p>
+                  <a href="#" id="proxyLink" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+              </div>
+            </div>
+
+            <aside class="side-panel" aria-label="代理说明" data-i18n-aria-label="proxyInfo">
+              <section class="info-card">
+                <h2 data-i18n="apiTitle">接口说明</h2>
+                <div class="metric-grid">
+                  <div class="metric-card">
+                    <span data-i18n="standardShort">标准</span>
+                    <strong>/proxy</strong>
+                  </div>
+                  <div class="metric-card">
+                    <span data-i18n="advancedShort">高级</span>
+                    <strong>/advanced-proxy</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section class="info-card">
+                <h3 data-i18n="tipsTitle">使用建议</h3>
+                <p data-i18n="tipsDesc">请使用包含 http:// 或 https:// 的完整地址。生成后的链接会在新窗口打开，方便保留当前输入。</p>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <p data-i18n="footer">基于 EdgeOne Pages Functions 构建。请仅在合规、授权和研究场景中使用。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (() => {
+        const translations = {
+          "zh-CN": {
+            pageTitle: "EdgeOne Proxy",
+            pageDescription: "通过 EdgeOne Pages Functions 生成标准或高级代理访问链接。",
+            brand: "EdgeOne Proxy",
+            brandHome: "EdgeOne Proxy 首页",
+            primaryNav: "页面导航",
+            navProxy: "Proxy",
+            navTools: "工具站",
+            navBlog: "博客",
+            languageToggle: "切换语言",
+            languageMenu: "选择语言",
+            themeToggle: "切换主题",
+            themeMenu: "选择主题",
+            themeLight: "浅色",
+            themeDark: "深色",
+            themeSystem: "跟随系统",
+            githubLink: "GitHub",
+            heroTitle: "网站代理访问工具",
+            heroDesc: "输入目标网站地址，选择代理模式后生成当前部署域名下的访问链接。页面只负责生成入口，代理请求仍由现有 Functions 处理。",
+            proxyTool: "代理链接生成器",
+            toolTitle: "生成代理链接",
+            toolDesc: "填写完整 URL，例如 https://example.com。",
+            statusReady: "就绪",
+            urlLabel: "目标网站地址",
+            modeLabel: "代理模式",
+            modeHint: "选择一个入口",
+            standardMode: "标准代理模式",
+            standardDesc: "简单快速的代理入口，适合静态内容或单页访问。",
+            advancedMode: "高级代理模式",
+            advancedDesc: "进入支持页面链接改写的入口，适合连续浏览。",
+            submitButton: "开始代理访问",
+            resultTitle: "代理链接",
+            resultReadyTitle: "代理链接已生成",
+            resultPlaceholder: "生成后的代理链接会显示在这里",
+            proxyInfo: "代理说明",
+            apiTitle: "接口说明",
+            standardShort: "标准",
+            advancedShort: "高级",
+            tipsTitle: "使用建议",
+            tipsDesc: "请使用包含 http:// 或 https:// 的完整地址。生成后的链接会在新窗口打开，方便保留当前输入。",
+            footer: "基于 EdgeOne Pages Functions 构建。请仅在合规、授权和研究场景中使用。",
+            invalidUrl: "请输入有效的网址，需要包含 http:// 或 https://"
+          },
+          en: {
+            pageTitle: "EdgeOne Proxy",
+            pageDescription: "Generate standard or advanced proxy links with EdgeOne Pages Functions.",
+            brand: "EdgeOne Proxy",
+            brandHome: "EdgeOne Proxy home",
+            primaryNav: "Primary navigation",
+            navProxy: "Proxy",
+            navTools: "Tools",
+            navBlog: "Blog",
+            languageToggle: "Switch language",
+            languageMenu: "Select language",
+            themeToggle: "Switch theme",
+            themeMenu: "Select theme",
+            themeLight: "Light",
+            themeDark: "Dark",
+            themeSystem: "System",
+            githubLink: "GitHub",
+            heroTitle: "Website Proxy Tool",
+            heroDesc: "Enter a target URL, choose a proxy mode, and generate a link under the current deployment domain. This page only creates the entry link; requests are still handled by Functions.",
+            proxyTool: "Proxy link generator",
+            toolTitle: "Generate Proxy Link",
+            toolDesc: "Enter a full URL, such as https://example.com.",
+            statusReady: "Ready",
+            urlLabel: "Target website URL",
+            modeLabel: "Proxy mode",
+            modeHint: "Choose an entry",
+            standardMode: "Standard Proxy Mode",
+            standardDesc: "A simple and fast proxy entry for static content or single-page access.",
+            advancedMode: "Advanced Proxy Mode",
+            advancedDesc: "Uses the link-rewriting route for smoother multi-page browsing.",
+            submitButton: "Start Proxy Access",
+            resultTitle: "Proxy link",
+            resultReadyTitle: "Proxy link generated",
+            resultPlaceholder: "Generated proxy link will appear here",
+            proxyInfo: "Proxy information",
+            apiTitle: "API routes",
+            standardShort: "Standard",
+            advancedShort: "Advanced",
+            tipsTitle: "Usage tips",
+            tipsDesc: "Use a complete URL containing http:// or https://. Generated links open in a new tab so your current input stays here.",
+            footer: "Built with EdgeOne Pages Functions. Use only in compliant, authorized, and research contexts.",
+            invalidUrl: "Enter a valid URL containing http:// or https://"
+          }
+        };
+
+        const languageKey = "edgeone_proxy_language";
+        const languageToggle = document.getElementById("languageToggle");
+        const languageMenu = document.getElementById("languageMenu");
+        const languageOptions = Array.from(document.querySelectorAll(".language-option"));
+        const descriptionMeta = document.querySelector('meta[name="description"]');
+        let activeLocale = localStorage.getItem(languageKey) || "zh-CN";
+
+        function getMessage(key) {
+          return translations[activeLocale]?.[key] || translations["zh-CN"][key] || key;
+        }
+
+        function applyLanguage(locale) {
+          activeLocale = translations[locale] ? locale : "zh-CN";
+          const dictionary = translations[activeLocale];
+          document.documentElement.lang = activeLocale;
+          document.title = dictionary.pageTitle;
+
+          if (descriptionMeta) {
+            descriptionMeta.setAttribute("content", dictionary.pageDescription);
+          }
+
+          document.querySelectorAll("[data-i18n]").forEach((node) => {
+            const value = dictionary[node.dataset.i18n];
+            if (value) {
+              node.textContent = value;
+            }
+          });
+
+          document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+            const value = dictionary[node.dataset.i18nAriaLabel];
+            if (value) {
+              node.setAttribute("aria-label", value);
+            }
+          });
+
+          languageOptions.forEach((option) => {
+            option.classList.toggle("is-active", option.dataset.locale === activeLocale);
+          });
+
+          window.dispatchEvent(new CustomEvent("edgeone-proxy-language-change"));
+        }
+
+        function closeLanguageMenu() {
+          languageMenu.hidden = true;
+          languageToggle.setAttribute("aria-expanded", "false");
+        }
+
+        window.edgeoneProxyI18n = { getMessage };
+        applyLanguage(activeLocale);
+
+        languageToggle.addEventListener("click", () => {
+          const isOpen = languageMenu.hidden;
+          languageMenu.hidden = !isOpen;
+          languageToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        languageOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            localStorage.setItem(languageKey, option.dataset.locale);
+            applyLanguage(option.dataset.locale);
+            closeLanguageMenu();
+          });
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!languageMenu.hidden && !event.target.closest(".language-switcher")) {
+            closeLanguageMenu();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeLanguageMenu();
+          }
+        });
+      })();
+    </script>
+
+    <script>
+      (() => {
+        const themeKey = "edgeone_proxy_theme";
+        const root = document.documentElement;
+        const themeToggle = document.getElementById("themeToggle");
+        const themeMenu = document.getElementById("themeMenu");
+        const themeOptions = Array.from(document.querySelectorAll(".theme-option"));
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function getStoredMode() {
+          return localStorage.getItem(themeKey) || "system";
+        }
+
+        function resolveTheme(mode) {
+          if (mode === "light" || mode === "dark") {
+            return mode;
+          }
+
+          return systemTheme.matches ? "dark" : "light";
+        }
+
+        function applyTheme(mode) {
+          const theme = resolveTheme(mode);
+          root.dataset.theme = theme;
+          root.style.colorScheme = theme;
+
+          if (themeMeta) {
+            themeMeta.setAttribute("content", theme === "dark" ? "#09090b" : "#ffffff");
+          }
+
+          themeOptions.forEach((option) => {
+            option.classList.toggle("is-active", option.dataset.themeMode === mode);
+          });
+        }
+
+        function closeThemeMenu() {
+          themeMenu.hidden = true;
+          themeToggle.setAttribute("aria-expanded", "false");
+        }
+
+        applyTheme(getStoredMode());
+
+        themeToggle.addEventListener("click", () => {
+          const isOpen = themeMenu.hidden;
+          themeMenu.hidden = !isOpen;
+          themeToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        themeOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            const mode = option.dataset.themeMode;
+            localStorage.setItem(themeKey, mode);
+            applyTheme(mode);
+            closeThemeMenu();
+          });
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!themeMenu.hidden && !event.target.closest(".theme-switcher")) {
+            closeThemeMenu();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeThemeMenu();
+          }
+        });
+
+        systemTheme.addEventListener("change", () => {
+          if (getStoredMode() === "system") {
+            applyTheme("system");
+          }
+        });
+      })();
+    </script>
+
+    <script>
+      let proxyType = "proxy";
+      const urlInput = document.getElementById("url");
+      const errorMessage = document.getElementById("errorMessage");
+      const resultContainer = document.getElementById("resultContainer");
+      const resultTitle = document.getElementById("resultTitle");
+      const proxyLink = document.getElementById("proxyLink");
+
+      function getMessage(key) {
+        return window.edgeoneProxyI18n?.getMessage(key) || key;
+      }
+
+      function renderResultState(isReady) {
+        resultContainer.classList.toggle("is-visible", isReady);
+        resultContainer.classList.toggle("is-empty", !isReady);
+        resultTitle.textContent = getMessage(isReady ? "resultReadyTitle" : "resultTitle");
+
+        if (!isReady) {
+          proxyLink.removeAttribute("href");
+          proxyLink.setAttribute("aria-disabled", "true");
+          proxyLink.tabIndex = -1;
+          proxyLink.textContent = getMessage("resultPlaceholder");
+        }
+      }
+
+      function updateProxyLink() {
+        const url = urlInput.value.trim();
+
+        errorMessage.style.display = "none";
+
+        if (!url) {
+          renderResultState(false);
+          return false;
+        }
+
+        try {
+          new URL(url);
+
+          const encodedUrl = encodeURIComponent(url);
+          const proxyUrl = `/${proxyType}?url=${encodedUrl}`;
+
+          proxyLink.href = proxyUrl;
+          proxyLink.textContent = proxyUrl;
+          proxyLink.removeAttribute("aria-disabled");
+          proxyLink.tabIndex = 0;
+          renderResultState(true);
+
+          return true;
+        } catch (err) {
+          errorMessage.textContent = getMessage("invalidUrl");
+          errorMessage.style.display = "block";
+          renderResultState(false);
+          return false;
+        }
+      }
+
+      renderResultState(false);
+
+      document.querySelectorAll(".proxy-option").forEach((option) => {
+        option.addEventListener("click", function() {
+          document.querySelectorAll(".proxy-option").forEach((opt) => {
+            opt.classList.remove("active");
+            opt.setAttribute("aria-checked", "false");
+          });
+
+          this.classList.add("active");
+          this.setAttribute("aria-checked", "true");
+          proxyType = this.dataset.type;
+
+          if (urlInput.value.trim()) {
+            updateProxyLink();
+          }
+        });
+      });
+
+      urlInput.addEventListener("input", function() {
+        if (resultContainer.classList.contains("is-visible")) {
+          updateProxyLink();
+        }
+      });
+
+      document.getElementById("proxyForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        updateProxyLink();
+      });
+
+      window.addEventListener("edgeone-proxy-language-change", function() {
+        renderResultState(resultContainer.classList.contains("is-visible"));
+      });
+    </script>
+  </body>
+</html>

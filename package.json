@@ -1,0 +1,22 @@
+{
+  "name": "edgeone-proxy",
+  "version": "1.0.0",
+  "description": "EdgeOne Pages 网站代理应用",
+  "main": "index.js",
+  "scripts": {
+    "dev": "edgeone pages dev",
+    "init": "edgeone pages init",
+    "link": "edgeone pages link"
+  },
+  "keywords": [
+    "proxy",
+    "edgeone",
+    "pages",
+    "functions",
+    "serverless"
+  ],
+  "author": "",
+  "devDependencies": {
+    "edgeone": "^1.0.28"
+  }
+} 
