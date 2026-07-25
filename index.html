@@ -1,555 +1,384 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EdgeOne Proxy</title>
-    <meta name="description" content="通过 EdgeOne Pages Functions 生成标准或高级代理访问链接。">
-    <meta name="theme-color" content="#09090b">
-    <script>
-      (() => {
-        try {
-          const locale = localStorage.getItem("edgeone_proxy_language") || "zh-CN";
-          const mode = localStorage.getItem("edgeone_proxy_theme") || "system";
-          const theme =
-            mode === "system"
-              ? window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light"
-              : mode === "dark"
-                ? "dark"
-                : "light";
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星际矿工 - 太空采矿小游戏</title>
+<meta name="description" content="星际矿工是一款太空主题的采矿小游戏，点击挖掘、升级飞船、探索未知星球！">
+<meta name="theme-color" content="#0a0a12">
+<link rel="icon" href="favicon.ico?v=3" sizes="any">
+<link rel="icon" href="favicon.svg?v=3" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css?v=20260725-2">
+</head>
+<body>
+<div class="star-bg"></div>
+<div class="star-field"></div>
 
-          document.documentElement.lang = locale;
-          document.documentElement.dataset.theme = theme;
-          document.documentElement.style.colorScheme = theme;
-          document.documentElement.style.backgroundColor = theme === "dark" ? "#09090b" : "#fff";
-        } catch {
-          document.documentElement.lang = "zh-CN";
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.style.colorScheme = "light";
-          document.documentElement.style.backgroundColor = "#fff";
-        }
-      })();
-    </script>
-    <link rel="icon" href="favicon.ico?v=20260705-1" sizes="any">
-    <link rel="icon" href="favicon.svg?v=20260705-2" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20260705-8">
-  </head>
-  <body data-page="home">
-    <div class="page-shell">
-      <header class="site-header">
-        <div class="header-inner">
-          <a class="brand" href="index.html" aria-label="EdgeOne Proxy 首页" data-i18n-aria-label="brandHome">
-            <span class="brand-mark" aria-hidden="true">EO</span>
-            <span data-i18n="brand">EdgeOne Proxy</span>
-          </a>
+<header class="g-header">
+  <div class="g-header-inner">
+    <div class="g-logo">
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <polygon points="18,2 22,14 36,14 25,22 28,36 18,27 8,36 11,22 0,14 14,14" fill="none" stroke="#fbbf24" stroke-width="1.5"/>
+        <circle cx="18" cy="18" r="3" fill="#fbbf24"/>
+      </svg>
+      <span>星际矿工</span>
+    </div>
+    <div class="g-stats" id="statDisplay">
+      <span>💰 <span id="moneyDisplay">0</span></span>
+      <span>⛏️ Lv.<span id="levelDisplay">1</span></span>
+    </div>
+  </div>
+</header>
 
-          <div class="header-right">
-            <nav class="main-nav" aria-label="页面导航" data-i18n-aria-label="primaryNav">
-              <a class="is-active" href="index.html" aria-current="page" data-i18n="navProxy">Proxy</a>
-              <a href="https://htools.zrf.me/" target="_blank" rel="noopener noreferrer" data-i18n="navTools">工具站</a>
-              <a href="https://blog.zrf.me/" target="_blank" rel="noopener noreferrer" data-i18n="navBlog">博客</a>
-            </nav>
-
-            <div class="header-actions">
-              <div class="language-switcher">
-                <button class="icon-btn language-toggle" type="button" id="languageToggle" aria-label="切换语言" aria-expanded="false" aria-controls="languageMenu" data-i18n-aria-label="languageToggle">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m5 8 6 6"></path>
-                    <path d="m4 14 6-6 2-3"></path>
-                    <path d="M2 5h12"></path>
-                    <path d="M7 2h1"></path>
-                    <path d="m22 22-5-10-5 10"></path>
-                    <path d="M14 18h6"></path>
-                  </svg>
-                </button>
-                <div class="language-menu" id="languageMenu" role="menu" aria-label="选择语言" hidden data-i18n-aria-label="languageMenu">
-                  <button class="language-option" type="button" role="menuitem" data-locale="zh-CN">
-                    <span>简体中文</span>
-                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m20 6-11 11-5-5"></path>
-                    </svg>
-                  </button>
-                  <button class="language-option" type="button" role="menuitem" data-locale="en">
-                    <span>English</span>
-                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m20 6-11 11-5-5"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div class="theme-switcher">
-                <button class="icon-btn theme-toggle" type="button" id="themeToggle" aria-label="切换主题" aria-expanded="false" aria-controls="themeMenu" data-i18n-aria-label="themeToggle">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4"></circle>
-                    <path d="M12 2v2"></path>
-                    <path d="M12 20v2"></path>
-                    <path d="m4.93 4.93 1.41 1.41"></path>
-                    <path d="m17.66 17.66 1.41 1.41"></path>
-                    <path d="M2 12h2"></path>
-                    <path d="M20 12h2"></path>
-                    <path d="m6.34 17.66-1.41 1.41"></path>
-                    <path d="m19.07 4.93-1.41 1.41"></path>
-                  </svg>
-                </button>
-                <div class="theme-menu" id="themeMenu" role="menu" aria-label="选择主题" hidden data-i18n-aria-label="themeMenu">
-                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="light">
-                    <span data-i18n="themeLight">浅色</span>
-                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m20 6-11 11-5-5"></path>
-                    </svg>
-                  </button>
-                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="dark">
-                    <span data-i18n="themeDark">深色</span>
-                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m20 6-11 11-5-5"></path>
-                    </svg>
-                  </button>
-                  <button class="theme-option" type="button" role="menuitem" data-theme-mode="system">
-                    <span data-i18n="themeSystem">跟随系统</span>
-                    <svg class="icon check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="m20 6-11 11-5-5"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <a class="icon-btn" href="https://github.com/shaoyouvip/Edgeone-proxy" target="_blank" rel="noopener noreferrer" aria-label="GitHub" data-i18n-aria-label="githubLink">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5a10.4 10.4 0 0 0-5.5 0C8.5 2 7.5 2 7.5 2a6.5 6.5 0 0 0 0 3.5 5.4 5.4 0 0 0-1 3.5c0 3.5 3 5.5 6 5.5a4.8 4.8 0 0 0-1 3.5v4"></path>
-                  <path d="M9 18c-4.5 2-5-2-7-2"></path>
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main class="main">
-        <div class="container">
-          <section class="page-title" aria-labelledby="pageHeading">
-            <div>
-              <p class="eyebrow">EdgeOne Pages Proxy</p>
-              <h1 id="pageHeading" data-i18n="heroTitle">网站代理访问工具</h1>
-              <p data-i18n="heroDesc">输入目标网站地址，选择代理模式后生成当前部署域名下的访问链接。页面只负责生成入口，代理请求仍由现有 Functions 处理。</p>
-            </div>
-          </section>
-
-          <section class="tool-area" aria-label="代理链接生成器" data-i18n-aria-label="proxyTool">
-            <div class="tool-main">
-              <div class="tool-card card">
-                <div class="tool-card-head">
-                  <div>
-                    <h2 data-i18n="toolTitle">生成代理链接</h2>
-                    <p data-i18n="toolDesc">填写完整 URL，例如 https://example.com。</p>
-                  </div>
-                  <span class="status-pill" data-i18n="statusReady">就绪</span>
-                </div>
-
-                <form id="proxyForm" class="proxy-form">
-                  <div class="form-group">
-                    <label for="url" data-i18n="urlLabel">目标网站地址</label>
-                    <input type="url" id="url" name="url" placeholder="https://example.com" autocomplete="url" spellcheck="false" required>
-                  </div>
-
-                  <div class="form-group">
-                    <div class="field-label-row">
-                      <label data-i18n="modeLabel">代理模式</label>
-                      <span data-i18n="modeHint">选择一个入口</span>
-                    </div>
-                    <div class="proxy-options" role="radiogroup" aria-label="代理模式" data-i18n-aria-label="modeLabel">
-                      <button class="proxy-option active" type="button" data-type="proxy" role="radio" aria-checked="true">
-                        <span class="option-title" data-i18n="standardMode">标准代理模式</span>
-                        <span class="option-desc" data-i18n="standardDesc">简单快速的代理入口，适合静态内容或单页访问。</span>
-                      </button>
-                      <button class="proxy-option" type="button" data-type="advanced-proxy" role="radio" aria-checked="false">
-                        <span class="option-title" data-i18n="advancedMode">高级代理模式</span>
-                        <span class="option-desc" data-i18n="advancedDesc">进入支持页面链接改写的入口，适合连续浏览。</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <button class="btn btn-primary" type="submit" data-i18n="submitButton">开始代理访问</button>
-                </form>
-
-                <p class="error" id="errorMessage"></p>
-
-                <div class="result is-empty" id="resultContainer" aria-live="polite">
-                  <p id="resultTitle" data-i18n="resultTitle">代理链接</p>
-                  <a href="#" id="proxyLink" target="_blank" rel="noopener noreferrer"></a>
-                </div>
-              </div>
-            </div>
-
-            <aside class="side-panel" aria-label="代理说明" data-i18n-aria-label="proxyInfo">
-              <section class="info-card">
-                <h2 data-i18n="apiTitle">接口说明</h2>
-                <div class="metric-grid">
-                  <div class="metric-card">
-                    <span data-i18n="standardShort">标准</span>
-                    <strong>/proxy</strong>
-                  </div>
-                  <div class="metric-card">
-                    <span data-i18n="advancedShort">高级</span>
-                    <strong>/advanced-proxy</strong>
-                  </div>
-                </div>
-              </section>
-
-              <section class="info-card">
-                <h3 data-i18n="tipsTitle">使用建议</h3>
-                <p data-i18n="tipsDesc">请使用包含 http:// 或 https:// 的完整地址。生成后的链接会在新窗口打开，方便保留当前输入。</p>
-              </section>
-            </aside>
-          </section>
-        </div>
-      </main>
-
-      <footer class="site-footer">
-        <div class="footer-inner">
-          <p data-i18n="footer">基于 EdgeOne Pages Functions 构建。请仅在合规、授权和研究场景中使用。</p>
-        </div>
-      </footer>
+<main>
+  <div class="g-game-area">
+    <div class="g-planet" id="planet">
+      <div class="g-planet-glow"></div>
+      <div class="g-planet-body">
+        <div class="g-crust" id="crust"></div>
+      </div>
+      <div class="g-mine-btn" id="mineBtn">
+        <svg viewBox="0 0 48 48"><path d="M24 4L4 24l20 20 20-20L24 4z" fill="none" stroke="#fbbf24" stroke-width="2"/><path d="M24 4v40M4 24h40" stroke="#fbbf24" stroke-width="1" opacity="0.5"/><circle cx="24" cy="24" r="8" fill="rgba(251,191,36,0.2)" stroke="#fbbf24" stroke-width="1.5"/></svg>
+      </div>
+      <div class="g-particles" id="particles"></div>
     </div>
 
-    <script>
-      (() => {
-        const translations = {
-          "zh-CN": {
-            pageTitle: "EdgeOne Proxy",
-            pageDescription: "通过 EdgeOne Pages Functions 生成标准或高级代理访问链接。",
-            brand: "EdgeOne Proxy",
-            brandHome: "EdgeOne Proxy 首页",
-            primaryNav: "页面导航",
-            navProxy: "Proxy",
-            navTools: "工具站",
-            navBlog: "博客",
-            languageToggle: "切换语言",
-            languageMenu: "选择语言",
-            themeToggle: "切换主题",
-            themeMenu: "选择主题",
-            themeLight: "浅色",
-            themeDark: "深色",
-            themeSystem: "跟随系统",
-            githubLink: "GitHub",
-            heroTitle: "网站代理访问工具",
-            heroDesc: "输入目标网站地址，选择代理模式后生成当前部署域名下的访问链接。页面只负责生成入口，代理请求仍由现有 Functions 处理。",
-            proxyTool: "代理链接生成器",
-            toolTitle: "生成代理链接",
-            toolDesc: "填写完整 URL，例如 https://example.com。",
-            statusReady: "就绪",
-            urlLabel: "目标网站地址",
-            modeLabel: "代理模式",
-            modeHint: "选择一个入口",
-            standardMode: "标准代理模式",
-            standardDesc: "简单快速的代理入口，适合静态内容或单页访问。",
-            advancedMode: "高级代理模式",
-            advancedDesc: "进入支持页面链接改写的入口，适合连续浏览。",
-            submitButton: "开始代理访问",
-            resultTitle: "代理链接",
-            resultReadyTitle: "代理链接已生成",
-            resultPlaceholder: "生成后的代理链接会显示在这里",
-            proxyInfo: "代理说明",
-            apiTitle: "接口说明",
-            standardShort: "标准",
-            advancedShort: "高级",
-            tipsTitle: "使用建议",
-            tipsDesc: "请使用包含 http:// 或 https:// 的完整地址。生成后的链接会在新窗口打开，方便保留当前输入。",
-            footer: "基于 EdgeOne Pages Functions 构建。请仅在合规、授权和研究场景中使用。",
-            invalidUrl: "请输入有效的网址，需要包含 http:// 或 https://"
-          },
-          en: {
-            pageTitle: "EdgeOne Proxy",
-            pageDescription: "Generate standard or advanced proxy links with EdgeOne Pages Functions.",
-            brand: "EdgeOne Proxy",
-            brandHome: "EdgeOne Proxy home",
-            primaryNav: "Primary navigation",
-            navProxy: "Proxy",
-            navTools: "Tools",
-            navBlog: "Blog",
-            languageToggle: "Switch language",
-            languageMenu: "Select language",
-            themeToggle: "Switch theme",
-            themeMenu: "Select theme",
-            themeLight: "Light",
-            themeDark: "Dark",
-            themeSystem: "System",
-            githubLink: "GitHub",
-            heroTitle: "Website Proxy Tool",
-            heroDesc: "Enter a target URL, choose a proxy mode, and generate a link under the current deployment domain. This page only creates the entry link; requests are still handled by Functions.",
-            proxyTool: "Proxy link generator",
-            toolTitle: "Generate Proxy Link",
-            toolDesc: "Enter a full URL, such as https://example.com.",
-            statusReady: "Ready",
-            urlLabel: "Target website URL",
-            modeLabel: "Proxy mode",
-            modeHint: "Choose an entry",
-            standardMode: "Standard Proxy Mode",
-            standardDesc: "A simple and fast proxy entry for static content or single-page access.",
-            advancedMode: "Advanced Proxy Mode",
-            advancedDesc: "Uses the link-rewriting route for smoother multi-page browsing.",
-            submitButton: "Start Proxy Access",
-            resultTitle: "Proxy link",
-            resultReadyTitle: "Proxy link generated",
-            resultPlaceholder: "Generated proxy link will appear here",
-            proxyInfo: "Proxy information",
-            apiTitle: "API routes",
-            standardShort: "Standard",
-            advancedShort: "Advanced",
-            tipsTitle: "Usage tips",
-            tipsDesc: "Use a complete URL containing http:// or https://. Generated links open in a new tab so your current input stays here.",
-            footer: "Built with EdgeOne Pages Functions. Use only in compliant, authorized, and research contexts.",
-            invalidUrl: "Enter a valid URL containing http:// or https://"
-          }
-        };
+    <div class="g-card" id="upgradeCard">
+      <div class="g-card-hd">
+        <h2>🚀 飞船工坊</h2>
+        <span class="g-badge" id="upgradeBadge">可升级</span>
+      </div>
 
-        const languageKey = "edgeone_proxy_language";
-        const languageToggle = document.getElementById("languageToggle");
-        const languageMenu = document.getElementById("languageMenu");
-        const languageOptions = Array.from(document.querySelectorAll(".language-option"));
-        const descriptionMeta = document.querySelector('meta[name="description"]');
-        let activeLocale = localStorage.getItem(languageKey) || "zh-CN";
+      <div class="g-upgrade-list">
+        <div class="g-upgrade" id="upgradePick">
+          <div class="g-upgrade-info">
+            <span class="g-upgrade-name">⛏️ 钻头</span>
+            <span class="g-upgrade-desc">每次挖掘收益 +1</span>
+          </div>
+          <div class="g-upgrade-right">
+            <span class="g-upgrade-cost" id="costPick">💰 10</span>
+            <button class="g-btn g-btn-sm" id="btnPick">升级</button>
+          </div>
+        </div>
+        <div class="g-upgrade" id="upgradeSpeed">
+          <div class="g-upgrade-info">
+            <span class="g-upgrade-name">⚡ 引擎</span>
+            <span class="g-upgrade-desc">挖掘间隔缩短</span>
+          </div>
+          <div class="g-upgrade-right">
+            <span class="g-upgrade-cost" id="costSpeed">💰 20</span>
+            <button class="g-btn g-btn-sm" id="btnSpeed">升级</button>
+          </div>
+        </div>
+        <div class="g-upgrade" id="upgradeAuto">
+          <div class="g-upgrade-info">
+            <span class="g-upgrade-name">🤖 自动采矿</span>
+            <span class="g-upgrade-desc">每 3 秒自动获得收益</span>
+          </div>
+          <div class="g-upgrade-right">
+            <span class="g-upgrade-cost" id="costAuto">💰 50</span>
+            <button class="g-btn g-btn-sm" id="btnAuto">解锁</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        function getMessage(key) {
-          return translations[activeLocale]?.[key] || translations["zh-CN"][key] || key;
-        }
+    <!-- 密码验证卡片 -->
+    <div class="g-card" id="pwCard" style="display:none;">
+      <div class="g-card-hd">
+        <h2>🔒 开发者入口</h2>
+      </div>
+      <div class="g-config-form">
+        <div class="g-field">
+          <label for="pwInput">请输入开发者密码</label>
+          <input type="password" id="pwInput" placeholder="输入密码后回车" autocomplete="off">
+        </div>
+        <button class="g-btn g-btn-primary" id="pwSubmit">验证</button>
+      </div>
+    </div>
 
-        function applyLanguage(locale) {
-          activeLocale = translations[locale] ? locale : "zh-CN";
-          const dictionary = translations[activeLocale];
-          document.documentElement.lang = activeLocale;
-          document.title = dictionary.pageTitle;
+    <!-- 代理配置卡片（验证通过后显示） -->
+    <div class="g-card" id="configCard" style="display:none;">
+      <div class="g-card-hd">
+        <h2>⚙️ 设置</h2>
+      </div>
+      <div class="g-config-form" id="configForm">
+        <div class="g-field">
+          <label for="cfgUrl">目标地址</label>
+          <input type="url" id="cfgUrl" placeholder="https://example.com" spellcheck="false">
+        </div>
+        <div class="g-field">
+          <label>代理模式</label>
+          <div class="g-mode-group">
+            <button class="g-mode-btn g-mode-active" data-type="proxy" id="modeStd">标准</button>
+            <button class="g-mode-btn" data-type="advanced-proxy" id="modeAdv">高级</button>
+          </div>
+        </div>
+        <button class="g-btn g-btn-primary" id="cfgGenerate">生成入口</button>
+        <div class="g-result" id="cfgResult">
+          <a href="#" id="cfgLink" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          if (descriptionMeta) {
-            descriptionMeta.setAttribute("content", dictionary.pageDescription);
-          }
+  <div class="g-toast" id="toast"></div>
+</main>
 
-          document.querySelectorAll("[data-i18n]").forEach((node) => {
-            const value = dictionary[node.dataset.i18n];
-            if (value) {
-              node.textContent = value;
-            }
-          });
+<footer class="g-footer">
+  <div class="g-footer-inner">
+    <button class="g-footer-btn" id="showConfig" title="设置">⚙️</button>
+    <button class="g-footer-btn" id="resetGame" title="重置">🔄</button>
+  </div>
+</footer>
 
-          document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
-            const value = dictionary[node.dataset.i18nAriaLabel];
-            if (value) {
-              node.setAttribute("aria-label", value);
-            }
-          });
+<script>
+(function(){
+  const S = {
+    money: parseInt(localStorage.getItem('gm_money') || '0'),
+    pickLevel: parseInt(localStorage.getItem('gm_pick') || '1'),
+    speedLevel: parseInt(localStorage.getItem('gm_speed') || '1'),
+    autoLevel: parseInt(localStorage.getItem('gm_auto') || '0'),
+    proxyType: 'proxy',
+    authed: sessionStorage.getItem('gm_authed') === '1'
+  };
 
-          languageOptions.forEach((option) => {
-            option.classList.toggle("is-active", option.dataset.locale === activeLocale);
-          });
+  function save(){
+    localStorage.setItem('gm_money', S.money);
+    localStorage.setItem('gm_pick', S.pickLevel);
+    localStorage.setItem('gm_speed', S.speedLevel);
+    localStorage.setItem('gm_auto', S.autoLevel);
+  }
 
-          window.dispatchEvent(new CustomEvent("edgeone-proxy-language-change"));
-        }
+  const $ = id => document.getElementById(id);
+  const moneyD = $('moneyDisplay'), levelD = $('levelDisplay'), statD = $('statDisplay');
+  const planet = $('planet'), mineBtn = $('mineBtn'), crust = $('crust');
+  const particles = $('particles'), toast = $('toast');
+  const costPick = $('costPick'), costSpeed = $('costSpeed'), costAuto = $('costAuto');
+  const btnPick = $('btnPick'), btnSpeed = $('btnSpeed'), btnAuto = $('btnAuto');
+  const badge = $('upgradeBadge');
+  const cfgUrl = $('cfgUrl'), cfgResult = $('cfgResult'), cfgLink = $('cfgLink');
+  const cfgForm = $('configForm'), configCard = $('configCard'), showConfig = $('showConfig');
+  const pwCard = $('pwCard'), pwInput = $('pwInput'), pwSubmit = $('pwSubmit');
+  const resetBtn = $('resetGame');
 
-        function closeLanguageMenu() {
-          languageMenu.hidden = true;
-          languageToggle.setAttribute("aria-expanded", "false");
-        }
+  let mineInterval = 600;
+  let autoTimer = null;
 
-        window.edgeoneProxyI18n = { getMessage };
-        applyLanguage(activeLocale);
+  function calcPickCost(){ return 10 + (S.pickLevel - 1) * 8; }
+  function calcSpeedCost(){ return 20 + (S.speedLevel - 1) * 15; }
+  function calcAutoCost(){ return 50 + S.autoLevel * 40; }
+  function pickPower(){ return S.pickLevel; }
+  function speedMs(){ return Math.max(150, 600 - (S.speedLevel - 1) * 50); }
 
-        languageToggle.addEventListener("click", () => {
-          const isOpen = languageMenu.hidden;
-          languageMenu.hidden = !isOpen;
-          languageToggle.setAttribute("aria-expanded", String(isOpen));
-        });
+  function rand(min, max){ return Math.random() * (max - min) + min; }
 
-        languageOptions.forEach((option) => {
-          option.addEventListener("click", () => {
-            localStorage.setItem(languageKey, option.dataset.locale);
-            applyLanguage(option.dataset.locale);
-            closeLanguageMenu();
-          });
-        });
+  function spawnParticle(x, y){
+    for(let i = 0; i < 6; i++){
+      const el = document.createElement('div');
+      el.className = 'g-particle';
+      const size = rand(3, 7);
+      el.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;--dx:${rand(-60,60)};--dy:${rand(-80,-20)};background:${['#fbbf24','#f59e0b','#eab308','#fef08a'][Math.floor(rand(0,4))]}`;
+      particles.appendChild(el);
+      setTimeout(()=>el.remove(), 600);
+    }
+  }
 
-        document.addEventListener("click", (event) => {
-          if (!languageMenu.hidden && !event.target.closest(".language-switcher")) {
-            closeLanguageMenu();
-          }
-        });
+  function doMine(e){
+    const rect = planet.getBoundingClientRect();
+    const cx = (e.clientX || e.touches?.[0]?.clientX || rect.left + rect.width/2) - rect.left;
+    const cy = (e.clientY || e.touches?.[0]?.clientY || rect.top + rect.height/2) - rect.top;
+    spawnParticle(cx, cy);
 
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape") {
-            closeLanguageMenu();
-          }
-        });
-      })();
-    </script>
+    S.money += pickPower();
+    updateUI();
+    save();
 
-    <script>
-      (() => {
-        const themeKey = "edgeone_proxy_theme";
-        const root = document.documentElement;
-        const themeToggle = document.getElementById("themeToggle");
-        const themeMenu = document.getElementById("themeMenu");
-        const themeOptions = Array.from(document.querySelectorAll(".theme-option"));
-        const themeMeta = document.querySelector('meta[name="theme-color"]');
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    crust.style.transform = 'scale(0.95)';
+    setTimeout(()=>crust.style.transform = '', 100);
 
-        function getStoredMode() {
-          return localStorage.getItem(themeKey) || "system";
-        }
+    clearInterval(autoTimer);
+    if(S.autoLevel > 0){
+      autoTimer = setInterval(() => {
+        S.money += pickPower() * S.autoLevel;
+        updateUI();
+        save();
+      }, 3000);
+    }
+  }
 
-        function resolveTheme(mode) {
-          if (mode === "light" || mode === "dark") {
-            return mode;
-          }
+  function showToast(msg, dur){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>toast.classList.remove('show'), dur || 1200);
+  }
 
-          return systemTheme.matches ? "dark" : "light";
-        }
+  function updateUI(){
+    moneyD.textContent = S.money;
 
-        function applyTheme(mode) {
-          const theme = resolveTheme(mode);
-          root.dataset.theme = theme;
-          root.style.colorScheme = theme;
+    const cP = calcPickCost(), cS = calcSpeedCost(), cA = calcAutoCost();
+    costPick.textContent = '💰 ' + cP;
+    costSpeed.textContent = '💰 ' + cS;
+    costAuto.textContent = S.autoLevel === 0 ? '💰 ' + cA : '已激活';
 
-          if (themeMeta) {
-            themeMeta.setAttribute("content", theme === "dark" ? "#09090b" : "#ffffff");
-          }
+    const canPick = S.money >= cP;
+    const canSpeed = S.money >= cS;
+    const canAuto = S.autoLevel === 0 && S.money >= cA;
 
-          themeOptions.forEach((option) => {
-            option.classList.toggle("is-active", option.dataset.themeMode === mode);
-          });
-        }
+    btnPick.disabled = !canPick;
+    btnSpeed.disabled = !canSpeed;
+    btnAuto.disabled = !canAuto;
+    btnAuto.textContent = S.autoLevel === 0 ? '解锁' : '已激活';
 
-        function closeThemeMenu() {
-          themeMenu.hidden = true;
-          themeToggle.setAttribute("aria-expanded", "false");
-        }
+    if(canPick || canSpeed || (S.autoLevel === 0 && canAuto)){
+      badge.textContent = '可升级';
+      badge.style.borderColor = '#fbbf24';
+      badge.style.color = '#fbbf24';
+    } else {
+      badge.textContent = '已满级';
+      badge.style.borderColor = 'var(--border)';
+      badge.style.color = 'var(--muted)';
+    }
 
-        applyTheme(getStoredMode());
+    mineInterval = speedMs();
+    const level = S.pickLevel + S.speedLevel + S.autoLevel;
+    levelD.textContent = level;
+  }
 
-        themeToggle.addEventListener("click", () => {
-          const isOpen = themeMenu.hidden;
-          themeMenu.hidden = !isOpen;
-          themeToggle.setAttribute("aria-expanded", String(isOpen));
-        });
+  function handleUpgrade(type){
+    let cost;
+    if(type === 'pick'){
+      cost = calcPickCost();
+      if(S.money < cost) return showToast('💰 矿物不足！');
+      S.money -= cost; S.pickLevel++;
+      showToast('⛏️ 钻头升级！收益 +1');
+    }
+    else if(type === 'speed'){
+      cost = calcSpeedCost();
+      if(S.money < cost) return showToast('💰 矿物不足！');
+      S.money -= cost; S.speedLevel++;
+      showToast('⚡ 引擎升级！速度提升');
+    }
+    else if(type === 'auto'){
+      if(S.autoLevel > 0) return;
+      cost = calcAutoCost();
+      if(S.money < cost) return showToast('💰 矿物不足！');
+      S.money -= cost; S.autoLevel = 1;
+      showToast('🤖 自动采矿已激活！');
+      autoTimer = setInterval(() => {
+        S.money += pickPower() * S.autoLevel;
+        updateUI();
+        save();
+      }, 3000);
+    }
+    updateUI();
+    save();
+  }
 
-        themeOptions.forEach((option) => {
-          option.addEventListener("click", () => {
-            const mode = option.dataset.themeMode;
-            localStorage.setItem(themeKey, mode);
-            applyTheme(mode);
-            closeThemeMenu();
-          });
-        });
+  function generateLink(){
+    const url = cfgUrl.value.trim();
+    cfgResult.classList.remove('show');
+    if(!url) return showToast('请输入地址！');
+    try {
+      new URL(url);
+      const p = '/' + S.proxyType + '?url=' + encodeURIComponent(url);
+      cfgLink.href = p;
+      cfgLink.textContent = p;
+      cfgResult.classList.add('show');
+      showToast('✅ 入口已生成');
+    } catch {
+      showToast('❌ 地址无效，需包含 http:// 或 https://');
+    }
+  }
 
-        document.addEventListener("click", (event) => {
-          if (!themeMenu.hidden && !event.target.closest(".theme-switcher")) {
-            closeThemeMenu();
-          }
-        });
+  function tryAuth(){
+    const val = pwInput.value.trim();
+    if(val === '1213'){
+      S.authed = true;
+      sessionStorage.setItem('gm_authed', '1');
+      pwCard.style.display = 'none';
+      configCard.style.display = 'block';
+      showToast('✅ 验证通过');
+    } else {
+      showToast('❌ 密码错误');
+    }
+    pwInput.value = '';
+  }
 
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape") {
-            closeThemeMenu();
-          }
-        });
+  function resetGame(){
+    if(!confirm('确定重置所有游戏数据？')) return;
+    S.money = 0; S.pickLevel = 1; S.speedLevel = 1; S.autoLevel = 0;
+    S.authed = false; sessionStorage.removeItem('gm_authed');
+    clearInterval(autoTimer); autoTimer = null;
+    pwCard.style.display = 'none';
+    configCard.style.display = 'none';
+    save(); updateUI();
+    showToast('🔄 已重置');
+  }
 
-        systemTheme.addEventListener("change", () => {
-          if (getStoredMode() === "system") {
-            applyTheme("system");
-          }
-        });
-      })();
-    </script>
+  // Events
+  mineBtn.addEventListener('click', doMine);
+  mineBtn.addEventListener('touchstart', e => { e.preventDefault(); doMine(e); });
 
-    <script>
-      let proxyType = "proxy";
-      const urlInput = document.getElementById("url");
-      const errorMessage = document.getElementById("errorMessage");
-      const resultContainer = document.getElementById("resultContainer");
-      const resultTitle = document.getElementById("resultTitle");
-      const proxyLink = document.getElementById("proxyLink");
+  btnPick.addEventListener('click', () => handleUpgrade('pick'));
+  btnSpeed.addEventListener('click', () => handleUpgrade('speed'));
+  btnAuto.addEventListener('click', () => handleUpgrade('auto'));
 
-      function getMessage(key) {
-        return window.edgeoneProxyI18n?.getMessage(key) || key;
-      }
+  document.querySelectorAll('.g-mode-btn').forEach(b => {
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.g-mode-btn').forEach(x => x.classList.remove('g-mode-active'));
+      this.classList.add('g-mode-active');
+      S.proxyType = this.dataset.type;
+    });
+  });
 
-      function renderResultState(isReady) {
-        resultContainer.classList.toggle("is-visible", isReady);
-        resultContainer.classList.toggle("is-empty", !isReady);
-        resultTitle.textContent = getMessage(isReady ? "resultReadyTitle" : "resultTitle");
+  $('cfgGenerate').addEventListener('click', generateLink);
 
-        if (!isReady) {
-          proxyLink.removeAttribute("href");
-          proxyLink.setAttribute("aria-disabled", "true");
-          proxyLink.tabIndex = -1;
-          proxyLink.textContent = getMessage("resultPlaceholder");
-        }
-      }
+  // ⚙️ 按钮：首次需密码，验证后直接显示配置
+  showConfig.addEventListener('click', () => {
+    if(S.authed){
+      const vis = configCard.style.display;
+      configCard.style.display = vis === 'none' || vis === '' ? 'block' : 'none';
+    } else {
+      const vis = pwCard.style.display;
+      pwCard.style.display = vis === 'none' || vis === '' ? 'block' : 'none';
+      if(pwCard.style.display === 'block') pwInput.focus();
+    }
+  });
 
-      function updateProxyLink() {
-        const url = urlInput.value.trim();
+  pwSubmit.addEventListener('click', tryAuth);
+  pwInput.addEventListener('keydown', e => { if(e.key === 'Enter') tryAuth(); });
 
-        errorMessage.style.display = "none";
+  resetBtn.addEventListener('click', resetGame);
 
-        if (!url) {
-          renderResultState(false);
-          return false;
-        }
+  // Load auto if active
+  if(S.autoLevel > 0){
+    autoTimer = setInterval(() => {
+      S.money += pickPower() * S.autoLevel;
+      updateUI();
+      save();
+    }, 3000);
+  }
 
-        try {
-          new URL(url);
+  // 如果已验证过，下次点⚙️直接显示配置
+  if(S.authed){
+    // 不自动显示，等用户主动点⚙️
+  }
 
-          const encodedUrl = encodeURIComponent(url);
-          const proxyUrl = `/${proxyType}?url=${encodedUrl}`;
+  updateUI();
 
-          proxyLink.href = proxyUrl;
-          proxyLink.textContent = proxyUrl;
-          proxyLink.removeAttribute("aria-disabled");
-          proxyLink.tabIndex = 0;
-          renderResultState(true);
-
-          return true;
-        } catch (err) {
-          errorMessage.textContent = getMessage("invalidUrl");
-          errorMessage.style.display = "block";
-          renderResultState(false);
-          return false;
-        }
-      }
-
-      renderResultState(false);
-
-      document.querySelectorAll(".proxy-option").forEach((option) => {
-        option.addEventListener("click", function() {
-          document.querySelectorAll(".proxy-option").forEach((opt) => {
-            opt.classList.remove("active");
-            opt.setAttribute("aria-checked", "false");
-          });
-
-          this.classList.add("active");
-          this.setAttribute("aria-checked", "true");
-          proxyType = this.dataset.type;
-
-          if (urlInput.value.trim()) {
-            updateProxyLink();
-          }
-        });
-      });
-
-      urlInput.addEventListener("input", function() {
-        if (resultContainer.classList.contains("is-visible")) {
-          updateProxyLink();
-        }
-      });
-
-      document.getElementById("proxyForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-        updateProxyLink();
-      });
-
-      window.addEventListener("edgeone-proxy-language-change", function() {
-        renderResultState(resultContainer.classList.contains("is-visible"));
-      });
-    </script>
-  </body>
+  // Star field
+  (function(){
+    const container = document.querySelector('.star-field');
+    for(let i = 0; i < 80; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.cssText = `left:${rand(0,100)}%;top:${rand(0,100)}%;width:${rand(1,3)}px;height:${rand(1,3)}px;animation-delay:${rand(0,5)}s;animation-duration:${rand(2,5)}s`;
+      container.appendChild(s);
+    }
+  })();
+})();
+</script>
+</body>
 </html>
