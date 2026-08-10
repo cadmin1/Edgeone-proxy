@@ -66,7 +66,7 @@
 
 - `entry` 指向 `./src/esa-entry.js`（ESA 单入口函数，内部按路径 `/proxy`、`/advanced-proxy` 分流，逻辑与 EdgeOne 版一致）
 - `assets.directory` 为 `.`（根目录静态文件直接托管）
-- `installCommand` / `buildCommand` 为空，跳过安装与构建步骤
+- `installCommand` / `buildCommand` 为 `npm install` / `npm run build`，其中 `package.json` 内置了无害的 `build` 脚本（输出一行提示并成功退出），确保 ESA 构建步骤稳定通过
 
 将仓库导入 ESA「函数和 Pages」即可，无需额外改动。ESA 会忽略 `functions/` 目录。
 
