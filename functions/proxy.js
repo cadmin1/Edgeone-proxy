@@ -78,6 +78,18 @@ async function createTargetRequest(request, targetUrl) {
     }
   }
 
+  const parsedTarget = new URL(targetUrl);
+  const targetOrigin = parsedTarget.origin;
+
+  // 防盗链处理：把 referer/origin 改写为目标站点自身，模拟同站请求。
+  // 只改写在客户端确实携带了这两个头的情况，避免给无来源请求强加语义。
+  if (request.headers.get("referer")) {
+    headers.set("referer", targetOrigin);
+  }
+  if (request.headers.get("origin")) {
+    headers.set("origin", targetOrigin);
+  }
+
   return new Request(targetUrl, {
     method: request.method,
     headers,

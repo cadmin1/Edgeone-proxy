@@ -139,6 +139,15 @@ async function fetchTargetBasic(request, targetUrl) {
     }
   }
 
+  // 防盗链处理：referer/origin 改写为目标站点自身（与 functions/proxy.js 一致）
+  const targetOrigin = targetUrl.origin;
+  if (request.headers.get("referer")) {
+    headers.set("referer", targetOrigin);
+  }
+  if (request.headers.get("origin")) {
+    headers.set("origin", targetOrigin);
+  }
+
   return fetch(
     new Request(targetUrl.href, {
       method: request.method,
@@ -160,10 +169,13 @@ async function fetchTargetAdvanced(request, targetUrl) {
     }
   }
 
+  // 防盗链处理：referer/origin 改写为目标站点自身（与 functions/advanced-proxy.js 一致）
   const targetOrigin = targetUrl.origin;
-  const incomingOrigin = request.headers.get("origin");
-  if (incomingOrigin) {
+  if (request.headers.get("origin")) {
     headers.set("origin", targetOrigin);
+  }
+  if (request.headers.get("referer")) {
+    headers.set("referer", targetOrigin);
   }
 
   return fetch(

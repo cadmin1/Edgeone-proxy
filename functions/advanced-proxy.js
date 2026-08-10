@@ -110,6 +110,11 @@ async function fetchTarget(request, targetUrl) {
     headers.set("origin", targetOrigin);
   }
 
+  // 防盗链处理：referer 同样改写为目标站点自身（此前只处理了 origin）
+  if (request.headers.get("referer")) {
+    headers.set("referer", targetOrigin);
+  }
+
   return fetch(
     new Request(targetUrl.href, {
       method: request.method,
