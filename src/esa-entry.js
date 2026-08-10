@@ -44,6 +44,8 @@ const BLOCKED_RESPONSE_HEADERS = new Set([
   "x-frame-options"
 ]);
 
+const UPSTREAM_TIMEOUT_MS = 8000;
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -124,7 +126,19 @@ async function handleProxy(request, { mode }) {
     });
   } catch (error) {
     console.error(`Proxy request failed: ${error.message}`);
-    return textResponse(`Proxy request failed: ${error.message}`, 500);
+    const status = error.name === "AbortError" ? 504 : 500;
+    const detail = error.name === "AbortError" ? "upstream request timed out" : error.message;
+    return textResponse(`Proxy request failed: ${detail}`, status);
+  }
+}
+
+async function fetchWithTimeout(input, init) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -148,7 +162,7 @@ async function fetchTargetBasic(request, targetUrl) {
     headers.set("origin", targetOrigin);
   }
 
-  return fetch(
+  return fetchWithTimeout(
     new Request(targetUrl.href, {
       method: request.method,
       headers,
@@ -178,7 +192,7 @@ async function fetchTargetAdvanced(request, targetUrl) {
     headers.set("referer", targetOrigin);
   }
 
-  return fetch(
+  return fetchWithTimeout(
     new Request(targetUrl.href, {
       method: request.method,
       headers,
