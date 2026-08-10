@@ -1,8 +1,8 @@
 {
   "name": "edgeone-proxy",
   "entry": "./src/esa-entry.js",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "installCommand": "echo skip-install-no-deps",
+  "buildCommand": "echo skip-build-static-project",
   "assets": {
     "directory": "."
   }
