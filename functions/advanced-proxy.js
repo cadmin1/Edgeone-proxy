@@ -31,8 +31,6 @@ const BLOCKED_RESPONSE_HEADERS = new Set([
   "x-frame-options"
 ]);
 
-const UPSTREAM_TIMEOUT_MS = 8000;
-
 export async function onRequest({ request }) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -92,19 +90,7 @@ export async function onRequest({ request }) {
     });
   } catch (error) {
     console.error(`Advanced proxy request failed: ${error.message}`);
-    const status = error.name === "AbortError" ? 504 : 500;
-    const detail = error.name === "AbortError" ? "upstream request timed out" : error.message;
-    return textResponse(`Proxy request failed: ${detail}`, status);
-  }
-}
-
-async function fetchWithTimeout(input, init) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+    return textResponse(`Proxy request failed: ${error.message}`, 500);
   }
 }
 
@@ -124,12 +110,7 @@ async function fetchTarget(request, targetUrl) {
     headers.set("origin", targetOrigin);
   }
 
-  // 防盗链处理：referer 同样改写为目标站点自身（此前只处理了 origin）
-  if (request.headers.get("referer")) {
-    headers.set("referer", targetOrigin);
-  }
-
-  return fetchWithTimeout(
+  return fetch(
     new Request(targetUrl.href, {
       method: request.method,
       headers,

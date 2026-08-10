@@ -31,8 +31,6 @@ const BLOCKED_RESPONSE_HEADERS = new Set([
   "x-frame-options"
 ]);
 
-const UPSTREAM_TIMEOUT_MS = 8000;
-
 export async function onRequest({ request }) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -50,7 +48,7 @@ export async function onRequest({ request }) {
     }
 
     const targetRequest = await createTargetRequest(request, targetUrl);
-    const response = await fetchWithTimeout(targetRequest);
+    const response = await fetch(targetRequest);
     const responseHeaders = copyResponseHeaders(response.headers);
     responseHeaders.set("Access-Control-Allow-Origin", "*");
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -66,19 +64,7 @@ export async function onRequest({ request }) {
     });
   } catch (error) {
     console.error(`Proxy request failed: ${error.message}`);
-    const status = error.name === "AbortError" ? 504 : 500;
-    const detail = error.name === "AbortError" ? "upstream request timed out" : error.message;
-    return textResponse(`Proxy request failed: ${detail}`, status);
-  }
-}
-
-async function fetchWithTimeout(input, init) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  try {
-    return await fetch(input, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+    return textResponse(`Proxy request failed: ${error.message}`, 500);
   }
 }
 
@@ -90,18 +76,6 @@ async function createTargetRequest(request, targetUrl) {
     if (value) {
       headers.set(header, value);
     }
-  }
-
-  const parsedTarget = new URL(targetUrl);
-  const targetOrigin = parsedTarget.origin;
-
-  // 防盗链处理：把 referer/origin 改写为目标站点自身，模拟同站请求。
-  // 只改写在客户端确实携带了这两个头的情况，避免给无来源请求强加语义。
-  if (request.headers.get("referer")) {
-    headers.set("referer", targetOrigin);
-  }
-  if (request.headers.get("origin")) {
-    headers.set("origin", targetOrigin);
   }
 
   return new Request(targetUrl, {

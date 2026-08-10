@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "edgeone pages dev",
     "init": "edgeone pages init",
-    "link": "edgeone pages link",
-    "build": "echo \"static project, no build step needed\""
+    "link": "edgeone pages link"
   },
   "keywords": [
     "proxy",
