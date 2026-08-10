@@ -46,6 +46,10 @@
 
 ## 部署
 
+本仓库同时兼容 **腾讯 EdgeOne Pages** 与 **阿里云 ESA Pages** 两个平台，静态前端和两条代理路由在两个平台上行为一致。
+
+### 腾讯 EdgeOne Pages
+
 如果使用 EdgeOne Pages 直接上传部署，可压缩以下文件和目录：
 
 - `index.html`
@@ -54,7 +58,17 @@
 - `favicon.svg`
 - `functions/`
 
-确保 `functions/` 目录位于项目根目录，EdgeOne Pages 会自动识别其中的函数路由。
+确保 `functions/` 目录位于项目根目录，EdgeOne Pages 会自动识别其中的函数路由（`/proxy` → `functions/proxy.js`，`/advanced-proxy` → `functions/advanced-proxy.js`）。本平台的 `src/esa-entry.js` 与 `esa.jsonc` 会被忽略，无需处理。
+
+### 阿里云 ESA Pages
+
+仓库根目录的 `esa.jsonc` 已配置好构建参数：
+
+- `entry` 指向 `./src/esa-entry.js`（ESA 单入口函数，内部按路径 `/proxy`、`/advanced-proxy` 分流，逻辑与 EdgeOne 版一致）
+- `assets.directory` 为 `.`（根目录静态文件直接托管）
+- `installCommand` / `buildCommand` 为空，跳过安装与构建步骤
+
+将仓库导入 ESA「函数和 Pages」即可，无需额外改动。ESA 会忽略 `functions/` 目录。
 
 ## 本地开发
 
@@ -71,9 +85,12 @@ npm run dev
 ├── styles.css
 ├── favicon.ico
 ├── favicon.svg
-├── functions/
+├── esa.jsonc              # 阿里云 ESA Pages 构建配置（EdgeOne 忽略）
+├── functions/             # 腾讯 EdgeOne Pages 函数路由
 │   ├── proxy.js
 │   └── advanced-proxy.js
+├── src/
+│   └── esa-entry.js       # 阿里云 ESA Pages 单入口函数（EdgeOne 忽略）
 ├── package.json
 └── README.md
 ```

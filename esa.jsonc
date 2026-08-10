@@ -1,0 +1,9 @@
+{
+  "name": "edgeone-proxy",
+  "entry": "./src/esa-entry.js",
+  "installCommand": "",
+  "buildCommand": "",
+  "assets": {
+    "directory": "."
+  }
+}
