@@ -1,0 +1,10 @@
+{
+  "name": "edgeone-proxy-aliyun-fc",
+  "version": "1.0.0",
+  "description": "Proxy ported to Alibaba Cloud Function Compute (HTTP trigger, event function). Standard + advanced proxy with hotlink bypass and upstream timeout.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}

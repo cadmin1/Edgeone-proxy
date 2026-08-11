@@ -93,6 +93,8 @@ async function handleProxy(request, { mode }) {
       "X-Proxied-By",
       mode === "advanced" ? "EdgeOne-Pages-Advanced-Proxy" : "EdgeOne-Pages-Proxy"
     );
+    // 下载模式：所有成功响应带 Content-Disposition: attachment（可选 ?filename= 指定下载名）
+    setDownloadHeader(responseHeaders, requestUrl);
 
     if (mode === "advanced" && contentType.includes("text/html")) {
       let html = await response.text();
@@ -140,6 +142,17 @@ async function fetchWithTimeout(input, init) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+function setDownloadHeader(headers, requestUrl) {
+  const filename = requestUrl.searchParams.get("filename");
+  if (filename) {
+    const safe = filename.replace(/["\\]/g, "");
+    headers.set("Content-Disposition", `attachment; filename="${safe}"`);
+  } else {
+    headers.set("Content-Disposition", "attachment");
+  }
+  return headers;
 }
 
 /** Mirrors functions/proxy.js forwarding logic. */

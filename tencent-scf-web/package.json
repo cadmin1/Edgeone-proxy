@@ -1,0 +1,10 @@
+{
+  "name": "edgeone-proxy-tencent-scf-web",
+  "version": "1.0.0",
+  "description": "Proxy as Tencent Cloud SCF Web Function (HTTP-triggered function, listens on 0.0.0.0:9000).",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}
