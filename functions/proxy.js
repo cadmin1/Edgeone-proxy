@@ -54,6 +54,8 @@ export async function onRequest({ request }) {
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     responseHeaders.set("Access-Control-Allow-Headers", "*");
     responseHeaders.set("X-Proxied-By", "EdgeOne-Pages-Proxy");
+    // 下载模式：成功响应带 Content-Disposition: attachment（可选 ?filename= 指定下载名）
+    setDownloadHeader(responseHeaders, url);
 
     const body = await response.arrayBuffer();
 
@@ -105,6 +107,17 @@ function createCorsHeaders() {
     "Access-Control-Allow-Headers": "*",
     "Access-Control-Max-Age": "86400"
   };
+}
+
+function setDownloadHeader(headers, requestUrl) {
+  const filename = requestUrl.searchParams.get("filename");
+  if (filename) {
+    const safe = filename.replace(/["\\]/g, "");
+    headers.set("Content-Disposition", `attachment; filename="${safe}"`);
+  } else {
+    headers.set("Content-Disposition", "attachment");
+  }
+  return headers;
 }
 
 function textResponse(message, status) {
