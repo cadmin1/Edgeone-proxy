@@ -145,13 +145,8 @@ async function fetchWithTimeout(input, init) {
 }
 
 function setDownloadHeader(headers, requestUrl) {
-  // 默认不加下载头（与函数版一致，浏览器正常显示）；
-  // 仅当 ?download=1 或 ?filename=xxx 时带 Content-Disposition: attachment
+  // 下载模式：所有成功响应带 Content-Disposition: attachment（可选 ?filename= 指定下载名）
   const filename = requestUrl.searchParams.get("filename");
-  const force = requestUrl.searchParams.get("download");
-  if (!filename && force !== "1") {
-    return headers;
-  }
   if (filename) {
     const safe = filename.replace(/["\\]/g, "");
     headers.set("Content-Disposition", `attachment; filename="${safe}"`);
