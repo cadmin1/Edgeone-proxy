@@ -1,91 +1,66 @@
-# EdgeOne Proxy
+# EdgeOne Proxy（多平台代理）
 
-一个基于 EdgeOne Pages Functions 的轻量代理页面，包含静态前端和两个 Functions 代理入口。
+一个轻量 HTTP 代理，统一实现：**防盗链绕过（referer/origin 改写）、8 秒上游超时、默认下载响应头、HTML/CSS 链接改写（高级代理）**。当前保留三个平台版本：
 
-请仅在合规、授权和研究场景中使用本项目。不要将它用于绕过访问控制、未授权抓取、攻击测试或其他违反目标站点条款与当地法律法规的用途。
+| 平台 | 类型 | 目录 | 部署形态 |
+|------|------|------|----------|
+| 阿里云 | 函数计算 FC | `aliyun-fc/` | 事件函数 + HTTP 触发器，入口 `index.handler` |
+| 腾讯云 | 边缘计算 EdgeOne Pages | `functions/` | 边缘函数，入口 `onRequest(context)` |
+| 腾讯云 | 函数计算 SCF（Web 函数） | `tencent-scf-web/` | HTTP Server :9000 + 函数 URL，`scf_bootstrap` 启动 |
 
-## 功能
+> 请仅在合规、授权和研究场景中使用本项目。不要用于绕过访问控制、未授权抓取、攻击测试或其他违反目标站点条款与当地法律法规的用途。
 
-- 静态前端页面，支持浅色 / 深色模式。
-- 支持简体中文 / English 切换。
-- 提供标准代理与高级代理两个入口。
-- 适配 EdgeOne Pages 直接上传部署。
+## 统一功能
 
-## 路由
+- **标准代理** `/proxy?url=...`：透传（接口、图片、静态资源、下载）
+- **高级代理** `/advanced-proxy?url=...`：额外做 HTML/CSS 链接改写（连续浏览页面）
+- **防盗链**：客户端携带 referer/origin 时改写为目标站点自身
+- **超时兜底**：上游 8 秒无响应返回 504（带原因）
+- **响应头过滤**：黑名单（content-length、transfer-encoding、set-cookie 等）+ CORS 注入
 
-- 标准代理：`/proxy?url=...`
-- 高级代理：`/advanced-proxy?url=...`
+## 下载 / 内联控制（三版一致）
 
-## 使用方法
+| 请求参数 | 响应头 | 效果 |
+|----------|--------|------|
+| （默认） | `Content-Disposition: attachment` | 浏览器下载文件 |
+| `&inline=1` | `Content-Disposition: inline` | 浏览器内联显示 |
+| `&filename=xxx` | `attachment; filename="xxx"` | 下载并指定文件名 |
 
-要使用此代理访问目标地址，请按照以下步骤操作：
-
-1. 通过页面生成链接
-
-   打开部署后的站点首页，在输入框中填写完整目标 URL，例如 `https://example.com/`，然后选择标准代理或高级代理模式并点击开始访问。
-
-2. 直接发出请求
-
-   也可以直接向部署后的 EdgeOne Pages 域名发出请求，将 `url` 参数替换为需要访问的目标地址。
-
-   标准代理示例：
-
-   `https://your-edgeone-domain.com/proxy?url=https%3A%2F%2Fexample.com%2F`
-
-   高级代理示例：
-
-   `https://your-edgeone-domain.com/advanced-proxy?url=https%3A%2F%2Fexample.com%2F`
-
-3. 选择代理模式
-
-   标准代理适合接口、图片、静态资源或单个页面访问。高级代理会尝试改写页面中的链接、样式资源和部分相对路径，更适合连续浏览页面。
-
-4. 跨域请求
-
-   Functions 会返回基础 CORS 响应头，便于在前端 JavaScript 中请求代理资源。请确保目标站点允许被访问，并确认您的使用场景具备合法授权。
+错误响应（400/404/500/504）不带下载头，保持可读文本。
 
 ## 部署
 
-如果使用 EdgeOne Pages 直接上传部署，可压缩以下文件和目录：
+### 阿里云 FC（`aliyun-fc/`）
 
-- `index.html`
-- `styles.css`
-- `favicon.ico`
-- `favicon.svg`
-- `functions/`
+1. 函数计算 FC → 服务及函数 → 创建「事件函数」：Node.js 18、入口 `index.handler`、256MB、超时 60s；**高级配置 → 请求处理程序 = 处理 HTTP 请求**；
+2. 上传 `aliyun-fc/index.js + package.json`（zip）；
+3. 创建 **HTTP 触发器**（免鉴权）→ 访问 `https://{fc域名}/proxy?url=...`。
 
-确保 `functions/` 目录位于项目根目录，EdgeOne Pages 会自动识别其中的函数路由。
+⚠️ FC 默认域名强制 `Content-Disposition: attachment`（浏览器直接访问会下载）；`?inline=1` 在默认域名下仍可能被强制下载，需绑定**自定义域名**才能内联显示。图片 `<img>` / fetch 场景不受影响。
 
-## 本地开发
+### 腾讯 EdgeOne Pages（`functions/`）
+
+1. EdgeOne Pages 控制台 → 项目（本仓库）→ 构建部署；
+2. 访问 `https://{你的域名}/proxy?url=...`。
+
+### 腾讯 SCF Web 函数（`tencent-scf-web/`）
+
+1. 云函数 SCF → 新建 → **Web 函数（HTTP 触发函数）** → Nodejs 18.15、内存 256MB、超时 60s；
+2. 上传 zip（`index.js + scf_bootstrap + package.json`，bootstrap 已设 755 权限）；
+3. 启用**函数 URL**（免鉴权）→ 访问 `https://{你的函数URL}/proxy?url=...`。
+
+> scf_bootstrap 内容：`#!/bin/bash` + `export PORT=9000` + `/var/lang/node18/bin/node index.js`（若运行时为 16.13 改 `node16`）。上传报 405 时改用控制台「高级配置 → 启动命令」粘贴。
+
+## 本地测试
 
 ```bash
-npm install
-npm run dev
+node test-edgeone.mjs    # EdgeOne 边缘函数
+node test-fc.cjs         # 阿里 FC
+node test-tencent-web.cjs  # 腾讯 SCF Web 函数
 ```
 
-## 目录
+## 常见问题
 
-```text
-.
-├── index.html
-├── styles.css
-├── favicon.ico
-├── favicon.svg
-├── functions/
-│   ├── proxy.js
-│   └── advanced-proxy.js
-├── package.json
-└── README.md
-```
-
-## 免责声明
-
-- **责任限制：** 作者不对脚本可能导致的任何安全问题、数据损失、服务中断、法律纠纷或其他损害负责。使用此脚本需自行承担风险。
-
-- **不当使用：** 使用者需了解，本脚本可能被用于非法活动或未经授权的访问。作者强烈反对和谴责任何不当使用脚本的行为，并鼓励合法合规的使用。
-
-- **合法性：** 请确保遵守所有适用的法律、法规和政策，包括但不限于互联网使用政策、隐私法规和知识产权法。确保您拥有对目标地址的合法权限。
-
-- **自担风险：** 使用此脚本需自行承担风险。作者和 EdgeOne 不对脚本的滥用、不当使用或导致的任何损害承担责任。
-
-此免责声明针对非中国大陆地区用户，如在中国大陆地区使用，需遵守相关地区法律法规，且由使用者自行承担相应风险与责任。
+- **502 / ERR_INVALID_RESPONSE（边缘版访问 TMDB 等被墙站点）**：大陆边缘节点无法回源被墙域名，属网络问题；请用函数版（FC/SCF 回源可达）或挂代理。
+- **OverSize**：目标资源超过边缘函数响应体上限；大文件请用函数版。
+- **下载 vs 显示**：默认下载；需要内联显示加 `&inline=1`。
