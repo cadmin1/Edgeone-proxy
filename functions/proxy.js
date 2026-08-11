@@ -110,7 +110,11 @@ function createCorsHeaders() {
 }
 
 function setDownloadHeader(headers, requestUrl) {
-  // 下载模式：所有成功响应带 Content-Disposition: attachment（可选 ?filename= 指定下载名）
+  // 默认下载：成功响应带 Content-Disposition: attachment；
+  // ?inline=1 切回内联显示（不带下载头）；?filename=xxx 指定下载文件名
+  if (requestUrl.searchParams.get("inline") === "1") {
+    return headers;
+  }
   const filename = requestUrl.searchParams.get("filename");
   if (filename) {
     const safe = filename.replace(/["\\]/g, "");
