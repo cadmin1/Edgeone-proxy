@@ -89,6 +89,7 @@ exports.handler = async (event, context) => {
     const responseHeaders = copyResponseHeaders(upstream.headers);
     addCorsHeaders(responseHeaders);
     responseHeaders['X-Proxied-By'] = 'Huawei-FunctionGraph-Proxy';
+    setDownloadHeader(responseHeaders, (n) => query[n] || null);
 
     const contentType = upstream.headers.get('content-type') || '';
 
@@ -231,6 +232,22 @@ function addCorsHeaders(headers) {
 
 function textHeaders() {
   return addCorsHeaders({ 'Content-Type': 'text/plain; charset=UTF-8' });
+}
+
+// 统一下载头：默认 attachment（下载）；?inline=1 → inline（内联显示）；?filename=xxx 指定下载名
+function setDownloadHeader(headers, getParam) {
+  if (getParam('inline') === '1') {
+    headers['Content-Disposition'] = 'inline';
+    return headers;
+  }
+  const filename = getParam('filename');
+  if (filename) {
+    const safe = filename.replace(/["\\]/g, '');
+    headers['Content-Disposition'] = `attachment; filename="${safe}"`;
+  } else {
+    headers['Content-Disposition'] = 'attachment';
+  }
+  return headers;
 }
 
 function rewriteHtml(html, targetUrl, proxyBase) {

@@ -145,9 +145,9 @@ async function fetchWithTimeout(input, init) {
 }
 
 function setDownloadHeader(headers, requestUrl) {
-  // 默认下载：成功响应带 Content-Disposition: attachment；
-  // ?inline=1 切回内联显示（不带下载头）；?filename=xxx 指定下载文件名
+  // 统一下载头：默认 attachment（下载）；?inline=1 → inline（内联显示）；?filename=xxx 指定下载名
   if (requestUrl.searchParams.get("inline") === "1") {
+    headers.set("Content-Disposition", "inline");
     return headers;
   }
   const filename = requestUrl.searchParams.get("filename");

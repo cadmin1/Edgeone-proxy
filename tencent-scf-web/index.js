@@ -101,6 +101,7 @@ const server = http.createServer(async (req, res) => {
     const responseHeaders = copyResponseHeaders(upstream.headers);
     addCorsHeaders(responseHeaders);
     responseHeaders['X-Proxied-By'] = 'Tencent-SCF-Web-Proxy';
+    setDownloadHeader(responseHeaders, (n) => url.searchParams.get(n));
 
     const contentType = upstream.headers.get('content-type') || '';
 
@@ -202,6 +203,22 @@ function addCorsHeaders(headers) {
 
 function createCorsHeaders() {
   return addCorsHeaders({});
+}
+
+// 统一下载头：默认 attachment（下载）；?inline=1 → inline（内联显示）；?filename=xxx 指定下载名
+function setDownloadHeader(headers, getParam) {
+  if (getParam('inline') === '1') {
+    headers['Content-Disposition'] = 'inline';
+    return headers;
+  }
+  const filename = getParam('filename');
+  if (filename) {
+    const safe = filename.replace(/["\\]/g, '');
+    headers['Content-Disposition'] = `attachment; filename="${safe}"`;
+  } else {
+    headers['Content-Disposition'] = 'attachment';
+  }
+  return headers;
 }
 
 function writeText(res, status, message) {

@@ -31,6 +31,8 @@ const BLOCKED_RESPONSE_HEADERS = new Set([
   "x-frame-options"
 ]);
 
+const UPSTREAM_TIMEOUT_MS = 8000;
+
 export async function onRequest({ request }) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -92,7 +94,9 @@ export async function onRequest({ request }) {
     });
   } catch (error) {
     console.error(`Advanced proxy request failed: ${error.message}`);
-    return textResponse(`Proxy request failed: ${error.message}`, 500);
+    const status = error.name === "AbortError" ? 504 : 500;
+    const detail = error.name === "AbortError" ? "upstream request timed out" : error.message;
+    return textResponse(`Proxy request failed: ${detail}`, status);
   }
 }
 
@@ -111,8 +115,12 @@ async function fetchTarget(request, targetUrl) {
   if (incomingOrigin) {
     headers.set("origin", targetOrigin);
   }
+  // 防盗链：referer 也改写为目标 origin（仅当客户端携带时）
+  if (request.headers.get("referer")) {
+    headers.set("referer", targetOrigin);
+  }
 
-  return fetch(
+  return fetchWithTimeout(
     new Request(targetUrl.href, {
       method: request.method,
       headers,
@@ -120,6 +128,16 @@ async function fetchTarget(request, targetUrl) {
       redirect: "follow"
     })
   );
+}
+
+async function fetchWithTimeout(input, init) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function copyResponseHeaders(sourceHeaders) {
@@ -144,9 +162,9 @@ function createCorsHeaders() {
 }
 
 function setDownloadHeader(headers, requestUrl) {
-  // 默认下载：成功响应带 Content-Disposition: attachment；
-  // ?inline=1 切回内联显示（不带下载头）；?filename=xxx 指定下载文件名
+  // 统一下载头：默认 attachment（下载）；?inline=1 → inline（内联显示）；?filename=xxx 指定下载名
   if (requestUrl.searchParams.get("inline") === "1") {
+    headers.set("Content-Disposition", "inline");
     return headers;
   }
   const filename = requestUrl.searchParams.get("filename");
